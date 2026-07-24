@@ -122,7 +122,12 @@ async function loadStateFromFirebase() {
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   if (firebaseSyncEnabled && !isLoadingFromFirebase) {
-    firebaseDb.ref("/games/default").set(state).catch(e => console.log("Firebase save error:", e));
+    firebaseDb.ref("/games/default").set(state).then(() => {
+      console.log("Firebase save successful");
+    }).catch(e => {
+      console.error("Firebase save error:", e.code, e.message);
+      toast("Error saving to cloud: " + e.message);
+    });
   }
   render();
 }
@@ -582,4 +587,34 @@ $("resetBtn").addEventListener("click", () => {
 });
 
 render();
+
+// Diagnostic function to check Firebase connection
+function checkFirebaseConnection() {
+  if (!firebaseSyncEnabled) {
+    console.warn("Firebase is not enabled");
+    return;
+  }
+  console.log("Testing Firebase connection...");
+  firebaseDb.ref("/test").set({ timestamp: new Date().toISOString() })
+    .then(() => {
+      console.log("Firebase connection: OK - Write successful");
+      firebaseDb.ref("/test").remove();
+    })
+    .catch(e => {
+      console.error("Firebase connection: FAILED");
+      console.error("Error code:", e.code);
+      console.error("Error message:", e.message);
+      console.log("\nFIX: Go to Firebase Console > Realtime Database > Rules and set:");
+      console.log(`{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}`);
+    });
+}
+
+// Call connection check after a delay to let Firebase initialize
+setTimeout(checkFirebaseConnection, 2000);
+
 if (firebaseSyncEnabled) enableFirebaseSync();
