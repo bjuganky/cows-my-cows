@@ -63,8 +63,9 @@ try {
   firebase.initializeApp(firebaseConfig);
   firebaseDb = firebase.database();
   firebaseSyncEnabled = true;
+  firebase.auth().signInAnonymously().catch(e => console.log("Firebase auth error:", e));
 } catch (e) {
-  console.log("Firebase not available");
+  console.log("Firebase not available:", e);
 }
 
 const freshState = () => ({
