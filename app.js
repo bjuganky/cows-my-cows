@@ -17,12 +17,14 @@ function initPasswordProtection() {
   // Check if user already authenticated in this session
   if (sessionStorage.getItem("gameAuthenticated") === "true") {
     mainApp.style.display = "block";
+    publicView.style.display = "none";
     if (settingsBtn2) settingsBtn2.style.display = "block";
     return;
   }
 
   // Show password modal
   mainApp.style.display = "none";
+  publicView.style.display = "block";
   if (settingsBtn2) settingsBtn2.style.display = "none";
   
   // Use setTimeout to ensure modal is ready
@@ -36,6 +38,7 @@ function initPasswordProtection() {
     if (passwordInput.value === CORRECT_PASSWORD) {
       sessionStorage.setItem("gameAuthenticated", "true");
       mainApp.style.display = "block";
+      publicView.style.display = "none";
       if (settingsBtn2) settingsBtn2.style.display = "block";
       passwordModal.close();
     } else {
@@ -239,6 +242,29 @@ function render() {
   `;
   }).join("") : "Add players to begin.";
 
+  // Update scoreboard in mainApp as well
+  if ($("scoreboardMain")) {
+    $("scoreboardMain").className = state.players.length ? "scoreboard" : "scoreboard empty-state";
+    $("scoreboardMain").innerHTML = state.players.length ? sorted.map((p, i) => {
+      let insuranceText = "not insured";
+      if (p.insurance) {
+        const now = new Date();
+        const daysLeft = Math.ceil((new Date(p.insurance.expiresAt) - now) / (1000 * 60 * 60 * 24));
+        insuranceText = daysLeft > 0 ? `${daysLeft} day${daysLeft === 1 ? "" : "s"} left` : "expired";
+      }
+      return `
+      <div class="player-row" data-player="${p.id}">
+        <div class="rank">${i + 1}</div>
+        <div>
+          <div class="player-name">${escapeHtml(p.name)} ${p.insurance ? "[INSURED]" : ""}</div>
+          <div class="player-meta">Bank: ${p.bank} · ${insuranceText}</div>
+        </div>
+        <div class="score"><strong>${p.cows}</strong><small>cows</small></div>
+      </div>
+    `;
+    }).join("") : "Add players to begin.";
+  }
+
   $("claimPlayer").innerHTML = options($("claimPlayer").value);
 
   $("historyList").className = state.history.length ? "history-list" : "history-list empty-state";
@@ -248,6 +274,10 @@ function render() {
       <small>${escapeHtml(h.time)}</small>
     </div>
   `).join("") : "No actions yet.";
+
+  // Show/hide next drive buttons based on player count
+  if ($("nextDriveBtn")) $("nextDriveBtn").style.display = state.players.length ? "block" : "none";
+  if ($("nextDriveBtnMain")) $("nextDriveBtnMain").style.display = state.players.length ? "block" : "none";
 }
 
 function requirePlayers(count = 1) {
@@ -259,6 +289,22 @@ function requirePlayers(count = 1) {
 }
 
 $("addPlayerBtn").addEventListener("click", () => {
+  openModal("Add player", `
+    <label>Player name<input id="newPlayerName" maxlength="30" autocomplete="off" autofocus></label>
+    <label>Starting cows<input id="newPlayerCows" type="number" min="0" value="0" inputmode="numeric"></label>
+  `, "Add player", () => {
+    const name = $("newPlayerName").value.trim();
+    const cows = Math.max(0, Number($("newPlayerCows").value) || 0);
+    if (!name) return toast("Enter a name"), false;
+    snapshot();
+    state.players.push({ id: uid(), name, cows, bank: 0, insurance: null });
+    addHistory(`${name} joined with ${cows} cows.`);
+    saveState();
+    return true;
+  });
+});
+
+$("addPlayerBtnMain").addEventListener("click", () => {
   openModal("Add player", `
     <label>Player name<input id="newPlayerName" maxlength="30" autocomplete="off" autofocus></label>
     <label>Starting cows<input id="newPlayerCows" type="number" min="0" value="0" inputmode="numeric"></label>
@@ -525,6 +571,25 @@ function runAction(action) {
 }
 
 $("nextDriveBtn").addEventListener("click", () => {
+  snapshot();
+  state.drive += 1;
+  state.rules.forEach(r => {
+    if (r.status === "pending" && r.startsDrive <= state.drive) r.status = "active";
+  });
+  const now = new Date();
+  const expired = [];
+  state.players.forEach(p => {
+    if (p.insurance && new Date(p.insurance.expiresAt) <= now) {
+      expired.push(p.name);
+      p.insurance = null;
+    }
+  });
+  addHistory(`Drive ${state.drive} began.${expired.length ? ` Insurance expired for ${expired.join(", ")}.` : ""}`);
+  saveState();
+  toast(`Drive ${state.drive} started`);
+});
+
+$("nextDriveBtnMain").addEventListener("click", () => {
   snapshot();
   state.drive += 1;
   state.rules.forEach(r => {
