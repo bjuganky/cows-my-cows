@@ -25,128 +25,158 @@
     </form>
   </dialog>
 
+  <!-- Always visible: Public view -->
+  <div id="publicView">
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">ROAD GAME SCOREKEEPER</p>
+        <h1>Cows My Cows</h1>
+      </div>
+      <button class="icon-btn" id="settingsBtn" aria-label="Game settings" style="display: none;">≡</button>
+    </header>
+
+    <main>
+      <section class="summary">
+        <div>
+          <span>Drive</span>
+          <strong id="driveNumber">1</strong>
+        </div>
+        <div>
+          <span>Players</span>
+          <strong id="playerCount">0</strong>
+        </div>
+        <div>
+          <span>Whataburgers</span>
+          <strong id="whataburgerCount">0</strong>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-title-row">
+          <div>
+            <p class="eyebrow">SCOREBOARD</p>
+            <h2>Current standings</h2>
+          </div>
+          <button class="secondary" id="addPlayerBtn" style="display: none;">+ Player</button>
+        </div>
+        <div id="scoreboard" class="scoreboard empty-state">
+          Add players to begin.
+        </div>
+        <button class="secondary full" id="nextDriveBtn" style="margin-top: 10px; display: none;">Next drive</button>
+      </section>
+
+      <section class="card">
+        <div class="section-title-row">
+          <div>
+            <p class="eyebrow">GAME LOG</p>
+            <h2>Recent actions</h2>
+          </div>
+        </div>
+        <div id="historyList" class="history-list empty-state">No actions yet.</div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Password-protected: Main app -->
   <div id="mainApp" style="display: none;">
-  <header class="app-header">
-    <div>
-      <p class="eyebrow">ROAD GAME SCOREKEEPER</p>
-      <h1>Cows My Cows</h1>
-    </div>
-    <button class="icon-btn" id="settingsBtn" aria-label="Game settings">≡</button>
-  </header>
+    <header class="app-header" style="position: relative; z-index: 2;">
+      <div>
+        <p class="eyebrow">ROAD GAME SCOREKEEPER</p>
+        <h1>Cows My Cows</h1>
+      </div>
+      <button class="icon-btn" id="settingsBtn2" aria-label="Game settings">≡</button>
+    </header>
 
-  <main>
-    <section class="summary">
-      <div>
-        <span>Drive</span>
-        <strong id="driveNumber">1</strong>
-      </div>
-      <div>
-        <span>Players</span>
-        <strong id="playerCount">0</strong>
-      </div>
-      <div>
-        <span>Whataburgers</span>
-        <strong id="whataburgerCount">0</strong>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="section-title-row">
-        <div>
-          <p class="eyebrow">SCOREBOARD</p>
-          <h2>Current standings</h2>
+    <main>
+      <section class="card">
+        <p class="eyebrow">QUICK ACTION</p>
+        <h2>Claim cows</h2>
+        <div class="form-grid">
+          <label>
+            Player
+            <select id="claimPlayer"></select>
+          </label>
+          <label>
+            Cows seen
+            <input id="claimAmount" type="number" min="1" inputmode="numeric" placeholder="12" />
+          </label>
         </div>
-        <button class="secondary" id="addPlayerBtn">+ Player</button>
-      </div>
-      <div id="scoreboard" class="scoreboard empty-state">
-        Add players to begin.
-      </div>
-      <button class="secondary full" id="nextDriveBtn" style="margin-top: 10px;">Next drive</button>
-    </section>
+        <button class="primary full" id="claimBtn">Cows My Cows</button>
+      </section>
 
-    <section class="card">
-      <p class="eyebrow">QUICK ACTION</p>
-      <h2>Claim cows</h2>
-      <div class="form-grid">
-        <label>
-          Player
-          <select id="claimPlayer"></select>
-        </label>
-        <label>
-          Cows seen
-          <input id="claimAmount" type="number" min="1" inputmode="numeric" placeholder="12" />
-        </label>
-      </div>
-      <button class="primary full" id="claimBtn">Cows My Cows</button>
-    </section>
-
-    <section class="card">
-      <p class="eyebrow">LANDMARKS & EVENTS</p>
-      <h2>Game actions</h2>
-      <div class="action-grid">
-        <button data-action="cemetery"><span>Cemetery</span><small>Kill your cows</small></button>
-        <button data-action="church"><span>Church</span><small>Double cows</small></button>
-        <button data-action="burial"><span>Roadside burial</span><small>Lose 5%, minimum 5</small></button>
-        <button data-action="bank"><span>Bank</span><small>Deposit or withdraw 10</small></button>
-        <button data-action="rustle"><span>Rustle</span><small>Steal 20%</small></button>
-        <button data-action="burger"><span>Whataburger</span><small>Caller gets +1</small></button>
-        <button data-action="insurance"><span>Insurance</span><small>Costs 20, lasts 4 days</small></button>
-        <button data-action="removeInsurance"><span>Remove Insurance</span><small>Cancel policy</small></button>
-        <button data-action="carwash"><span>Car wash</span><small>Oooo ahhhhh</small></button>
-        <button data-action="casino"><span>Casino</span><small>Random target and loss</small></button>
-        <button data-action="falsecall"><span>False call</span><small>Lose 10%</small></button>
-        <button data-action="moving"><span>Moo-vin out</span><small>Swap with first place</small></button>
-        <button data-action="rule"><span>Add rule</span><small>Costs 20% or minimum 20</small></button>
-        <button data-action="manualEdit"><span>Manual edit</span><small>Adjust cows</small></button>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="section-title-row">
-        <div>
-          <p class="eyebrow">GAME LOG</p>
-          <h2>Recent actions</h2>
+      <section class="card">
+        <p class="eyebrow">LANDMARKS & EVENTS</p>
+        <h2>Game actions</h2>
+        <div class="action-grid">
+          <button data-action="cemetery"><span>Cemetery</span><small>Kill your cows</small></button>
+          <button data-action="church"><span>Church</span><small>Double cows</small></button>
+          <button data-action="burial"><span>Roadside burial</span><small>Lose 5%, minimum 5</small></button>
+          <button data-action="bank"><span>Bank</span><small>Deposit or withdraw 10</small></button>
+          <button data-action="rustle"><span>Rustle</span><small>Steal 20%</small></button>
+          <button data-action="burger"><span>Whataburger</span><small>Caller gets +1</small></button>
+          <button data-action="insurance"><span>Insurance</span><small>Costs 20, lasts 4 days</small></button>
+          <button data-action="removeInsurance"><span>Remove Insurance</span><small>Cancel policy</small></button>
+          <button data-action="carwash"><span>Car wash</span><small>Oooo ahhhhh</small></button>
+          <button data-action="casino"><span>Casino</span><small>Random target and loss</small></button>
+          <button data-action="falsecall"><span>False call</span><small>Lose 10%</small></button>
+          <button data-action="moving"><span>Moo-vin out</span><small>Swap with first place</small></button>
+          <button data-action="rule"><span>Add rule</span><small>Costs 20% or minimum 20</small></button>
         </div>
-        <button class="secondary" id="undoBtn">Undo</button>
-      </div>
-      <div id="historyList" class="history-list empty-state">No actions yet.</div>
-    </section>
-  </main>
+      </section>
 
-  <dialog id="modal">
-    <form method="dialog" id="modalForm">
-      <div class="modal-header">
-        <h2 id="modalTitle">Action</h2>
-        <button value="cancel" class="icon-btn" aria-label="Close">×</button>
-      </div>
-      <div id="modalBody"></div>
-      <div class="modal-actions">
-        <button value="cancel" class="secondary">Cancel</button>
-        <button value="default" class="primary" id="modalConfirm">Confirm</button>
-      </div>
-    </form>
-  </dialog>
+      <section class="card">
+        <p class="eyebrow">MANUAL ADJUSTMENTS</p>
+        <h2>Game management</h2>
+        <div class="action-grid">
+          <button data-action="manualWhataburger"><span>Set Whataburger</span><small>Manual set count</small></button>
+          <button data-action="manualEdit"><span>Manual edit</span><small>Adjust cows</small></button>
+        </div>
+      </section>
 
-  <dialog id="settingsModal">
-    <form method="dialog">
-      <div class="modal-header">
-        <h2>Game settings</h2>
-        <button value="cancel" class="icon-btn" aria-label="Close">×</button>
-      </div>
-      <div class="stack">
-        <button type="button" class="secondary full" id="exportBtn">Export game file</button>
-        <label class="file-button secondary full">
-          Import game file
-          <input id="importInput" type="file" accept="application/json" hidden />
-        </label>
-        <button type="button" class="danger full" id="resetBtn">Reset entire game</button>
-      </div>
-      <p class="fine-print">Scores are saved in this browser. Export a backup before clearing browser data or changing devices.</p>
-    </form>
-  </dialog>
+      <section class="card">
+        <div class="section-title-row">
+          <div>
+            <p class="eyebrow">ACTIONS</p>
+            <h2>Game control</h2>
+          </div>
+          <button class="secondary" id="undoBtn">Undo</button>
+        </div>
+      </section>
+    </main>
 
-  <div id="toast" role="status" aria-live="polite"></div>
+    <dialog id="modal">
+      <form method="dialog" id="modalForm">
+        <div class="modal-header">
+          <h2 id="modalTitle">Action</h2>
+          <button value="cancel" class="icon-btn" aria-label="Close">×</button>
+        </div>
+        <div id="modalBody"></div>
+        <div class="modal-actions">
+          <button value="cancel" class="secondary">Cancel</button>
+          <button value="default" class="primary" id="modalConfirm">Confirm</button>
+        </div>
+      </form>
+    </dialog>
 
+    <dialog id="settingsModal">
+      <form method="dialog">
+        <div class="modal-header">
+          <h2>Game settings</h2>
+          <button value="cancel" class="icon-btn" aria-label="Close">×</button>
+        </div>
+        <div class="stack">
+          <button type="button" class="secondary full" id="exportBtn">Export game file</button>
+          <label class="file-button secondary full">
+            Import game file
+            <input id="importInput" type="file" accept="application/json" hidden />
+          </label>
+          <button type="button" class="danger full" id="resetBtn">Reset entire game</button>
+        </div>
+        <p class="fine-print">Scores are saved in this browser. Export a backup before clearing browser data or changing devices.</p>
+      </form>
+    </dialog>
+
+    <div id="toast" role="status" aria-live="polite"></div>
   </div>
 
   <script src="app.js"></script>

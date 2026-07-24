@@ -3,9 +3,11 @@ const CORRECT_PASSWORD = "bkferules";
 // Password protection - setup on DOM ready
 function initPasswordProtection() {
   const mainApp = document.getElementById("mainApp");
+  const publicView = document.getElementById("publicView");
   const passwordModal = document.getElementById("passwordModal");
   const passwordForm = document.getElementById("passwordForm");
   const passwordInput = document.getElementById("passwordInput");
+  const settingsBtn2 = document.getElementById("settingsBtn2");
 
   if (!mainApp || !passwordModal || !passwordForm || !passwordInput) {
     console.error("Password modal elements not found");
@@ -15,11 +17,13 @@ function initPasswordProtection() {
   // Check if user already authenticated in this session
   if (sessionStorage.getItem("gameAuthenticated") === "true") {
     mainApp.style.display = "block";
+    if (settingsBtn2) settingsBtn2.style.display = "block";
     return;
   }
 
   // Show password modal
   mainApp.style.display = "none";
+  if (settingsBtn2) settingsBtn2.style.display = "none";
   
   // Use setTimeout to ensure modal is ready
   setTimeout(() => {
@@ -32,6 +36,7 @@ function initPasswordProtection() {
     if (passwordInput.value === CORRECT_PASSWORD) {
       sessionStorage.setItem("gameAuthenticated", "true");
       mainApp.style.display = "block";
+      if (settingsBtn2) settingsBtn2.style.display = "block";
       passwordModal.close();
     } else {
       passwordInput.value = "";
@@ -368,6 +373,20 @@ function runAction(action) {
     });
   }
 
+  if (action === "manualWhataburger") {
+    openModal("Set Whataburger Count", `
+      <label>Whataburger number<input id="whataburgerNum" type="number" min="0" inputmode="numeric" placeholder="0"></label>
+      <p class="warning">Manually set the whataburger counter to any number.</p>
+    `, "Set count", () => {
+      const num = Number($("whataburgerNum").value);
+      if (!Number.isFinite(num) || num < 0) return toast("Enter a valid number"), false;
+      snapshot();
+      state.whataburgerCount = Math.floor(num);
+      addHistory(`Whataburger count manually set to ${state.whataburgerCount}.`);
+      saveState(); return true;
+    });
+  }
+
   if (action === "insurance") {
     openModal("Insurance", `
       <label>Player<select id="actionPlayer">${options()}</select></label>
@@ -525,7 +544,7 @@ $("undoBtn").addEventListener("click", () => {
   toast("Last action undone");
 });
 
-$("settingsBtn").addEventListener("click", () => $("settingsModal").showModal());
+$('settingsBtn2').addEventListener('click', () => $("settingsModal").showModal());
 
 $("exportBtn").addEventListener("click", () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], {type: "application/json"});
