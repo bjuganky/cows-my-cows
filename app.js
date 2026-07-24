@@ -56,32 +56,39 @@ if (document.readyState === "loading") {
 const STORAGE_KEY = "cows-my-cows-v1";
 const FIREBASE_DB_URL = "https://cows-my-cows-default-rtdb.firebaseio.com";
 
-const firebaseConfig = {
-  databaseURL: FIREBASE_DB_URL
-};
-
-let firebaseDb = null;
-let firebaseSyncEnabled = false;
+let firebaseSyncEnabled = true; // REST API is always available
 let isLoadingFromFirebase = false;
 
-// Wait a bit for Firebase to load from CDN
-setTimeout(() => {
+// Firebase REST API functions
+async function loadStateFromFirebase() {
   try {
-    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length === 0) {
-      firebase.initializeApp(firebaseConfig);
-      firebaseDb = firebase.database();
-      firebaseSyncEnabled = true;
-      console.log("Firebase initialized successfully");
-    } else if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-      firebaseDb = firebase.database();
-      firebaseSyncEnabled = true;
-      console.log("Firebase already initialized");
-    }
-  } catch (e) {
-    console.error("Firebase initialization error:", e.message);
-    firebaseSyncEnabled = false;
+    isLoadingFromFirebase = true;
+    const response = await fetch(`${FIREBASE_DB_URL}/games/default.json`);
+    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+    const data = await response.json();
+    isLoadingFromFirebase = false;
+    return data || null;
+  } catch (error) {
+    console.error("Firebase load error:", error.message);
+    isLoadingFromFirebase = false;
+    return null;
   }
-}, 500);
+}
+
+async function saveStateToFirebase(state) {
+  if (!firebaseSyncEnabled) return;
+  try {
+    const response = await fetch(`${FIREBASE_DB_URL}/games/default.json`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(state)
+    });
+    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+    console.log("Firebase save successful");
+  } catch (error) {
+    console.error("Firebase save error:", error.message);
+  }
+}
 
 const freshState = () => ({
   drive: 1,
@@ -112,51 +119,35 @@ function loadState() {
   }
 }
 
-async function loadStateFromFirebase() {
-  if (!firebaseSyncEnabled) return;
-  try {
-    isLoadingFromFirebase = true;
-    const snapshot = await firebaseDb.ref("/games/default").once("value");
-    const firebaseState = snapshot.val();
-    if (firebaseState && Array.isArray(firebaseState.players)) {
-      state = firebaseState;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      render();
-    }
-  } catch (e) {
-    console.log("Error loading from Firebase:", e);
-  } finally {
-    isLoadingFromFirebase = false;
-  }
-}
-
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   if (firebaseSyncEnabled && !isLoadingFromFirebase) {
-    firebaseDb.ref("/games/default").set(state).then(() => {
-      console.log("Firebase save successful");
-    }).catch(e => {
-      console.error("Firebase save error:", e.code, e.message);
-      toast("Error saving to cloud: " + e.message);
-    });
+    saveStateToFirebase(state);
   }
   render();
 }
 
-function enableFirebaseSync() {
+async function enableFirebaseSync() {
   if (!firebaseSyncEnabled) return;
-  loadStateFromFirebase();
-  firebaseDb.ref("/games/default").on("value", (snapshot) => {
-    if (!isLoadingFromFirebase && snapshot.val()) {
-      const firebaseState = snapshot.val();
-      if (JSON.stringify(state) !== JSON.stringify(firebaseState)) {
-        state = firebaseState;
+  const fbState = await loadStateFromFirebase();
+  if (fbState && Array.isArray(fbState.players)) {
+    state = fbState;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    render();
+  }
+  
+  // Poll Firebase every 5 seconds for updates
+  setInterval(async () => {
+    if (!isLoadingFromFirebase) {
+      const fbState = await loadStateFromFirebase();
+      if (fbState && JSON.stringify(state) !== JSON.stringify(fbState)) {
+        state = fbState;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         render();
         toast("Game updated from cloud");
       }
     }
-  });
+  }, 5000);
 }
 
 function snapshot() {
@@ -600,35 +591,37 @@ $("resetBtn").addEventListener("click", () => {
 render();
 
 // Diagnostic function to check Firebase connection
-function checkFirebaseConnection() {
-  if (!firebaseSyncEnabled) {
-    console.warn("Firebase is not enabled");
-    return;
-  }
-  console.log("Testing Firebase connection...");
-  firebaseDb.ref("/test").set({ timestamp: new Date().toISOString() })
-    .then(() => {
+async function checkFirebaseConnection() {
+  console.log("Testing Firebase REST API connection...");
+  try {
+    const testData = { timestamp: new Date().toISOString() };
+    const response = await fetch(`${FIREBASE_DB_URL}/test.json`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(testData)
+    });
+    if (response.ok) {
       console.log("Firebase connection: OK - Write successful");
-      firebaseDb.ref("/test").remove();
-    })
-    .catch(e => {
-      console.error("Firebase connection: FAILED");
-      console.error("Error code:", e.code);
-      console.error("Error message:", e.message);
-      console.log("\nFIX: Go to Firebase Console > Realtime Database > Rules and set:");
-      console.log(`{
+      // Clean up test data
+      fetch(`${FIREBASE_DB_URL}/test.json`, { method: "DELETE" });
+    } else {
+      throw new Error(`HTTP ${response.status}`);
+    }
+  } catch (e) {
+    console.error("Firebase connection: FAILED");
+    console.error("Error:", e.message);
+    console.log("\nFIX: Go to Firebase Console > Realtime Database > Rules and set:");
+    console.log(`{
   "rules": {
     ".read": true,
     ".write": true
   }
 }`);
-    });
+  }
 }
 
-// Call connection check after a delay to let Firebase initialize
-setTimeout(checkFirebaseConnection, 3000);
-
-// Enable sync after Firebase initializes
+// Enable sync - REST API is immediately available
 setTimeout(() => {
   if (firebaseSyncEnabled) enableFirebaseSync();
-}, 1000);
+  checkFirebaseConnection();
+}, 500);
