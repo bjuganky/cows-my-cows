@@ -1,4 +1,21 @@
 const STORAGE_KEY = "cows-my-cows-v1";
+const FIREBASE_DB_URL = "https://cows-my-cows-default-rtdb.firebaseio.com";
+
+const firebaseConfig = {
+  databaseURL: FIREBASE_DB_URL
+};
+
+let firebaseDb = null;
+let firebaseSyncEnabled = false;
+let isLoadingFromFirebase = false;
+
+try {
+  firebase.initializeApp(firebaseConfig);
+  firebaseDb = firebase.database();
+  firebaseSyncEnabled = true;
+} catch (e) {
+  console.log("Firebase not available");
+}
 
 const freshState = () => ({
   drive: 1,
@@ -29,9 +46,46 @@ function loadState() {
   }
 }
 
+async function loadStateFromFirebase() {
+  if (!firebaseSyncEnabled) return;
+  try {
+    isLoadingFromFirebase = true;
+    const snapshot = await firebaseDb.ref("/games/default").once("value");
+    const firebaseState = snapshot.val();
+    if (firebaseState && Array.isArray(firebaseState.players)) {
+      state = firebaseState;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      render();
+    }
+  } catch (e) {
+    console.log("Error loading from Firebase:", e);
+  } finally {
+    isLoadingFromFirebase = false;
+  }
+}
+
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (firebaseSyncEnabled && !isLoadingFromFirebase) {
+    firebaseDb.ref("/games/default").set(state).catch(e => console.log("Firebase save error:", e));
+  }
   render();
+}
+
+function enableFirebaseSync() {
+  if (!firebaseSyncEnabled) return;
+  loadStateFromFirebase();
+  firebaseDb.ref("/games/default").on("value", (snapshot) => {
+    if (!isLoadingFromFirebase && snapshot.val()) {
+      const firebaseState = snapshot.val();
+      if (JSON.stringify(state) !== JSON.stringify(firebaseState)) {
+        state = firebaseState;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        render();
+        toast("Game updated from cloud");
+      }
+    }
+  });
 }
 
 function snapshot() {
@@ -459,3 +513,4 @@ $("resetBtn").addEventListener("click", () => {
 });
 
 render();
+if (firebaseSyncEnabled) enableFirebaseSync();
