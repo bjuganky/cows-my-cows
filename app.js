@@ -81,15 +81,25 @@ async function loadStateFromFirebase() {
 async function saveStateToFirebase(state) {
   if (!firebaseSyncEnabled) return;
   try {
+    console.log("Saving to Firebase:", state);
+    const jsonBody = JSON.stringify(state);
+    console.log("JSON body length:", jsonBody.length);
+    
     const response = await fetch(`${FIREBASE_DB_URL}/games/default.json`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(state)
+      body: jsonBody
     });
+    
+    console.log("Firebase response status:", response.status, response.ok);
+    const responseText = await response.text();
+    console.log("Firebase response:", responseText);
+    
     if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
     console.log("Firebase save successful");
   } catch (error) {
     console.error("Firebase save error:", error.message);
+    toast("Error saving to cloud: " + error.message);
   }
 }
 
@@ -124,6 +134,7 @@ function loadState() {
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  console.log("saveState called, firebaseSyncEnabled:", firebaseSyncEnabled, "isLoadingFromFirebase:", isLoadingFromFirebase);
   if (firebaseSyncEnabled && !isLoadingFromFirebase) {
     saveStateToFirebase(state);
   }
