@@ -1,3 +1,43 @@
+const CORRECT_PASSWORD = "bkferules";
+
+// Password protection
+function initPasswordProtection() {
+  const mainApp = document.getElementById("mainApp");
+  const passwordModal = document.getElementById("passwordModal");
+  const passwordForm = document.getElementById("passwordForm");
+  const passwordInput = document.getElementById("passwordInput");
+
+  // Check if user already authenticated in this session
+  if (sessionStorage.getItem("gameAuthenticated") === "true") {
+    mainApp.style.display = "block";
+    passwordModal.close();
+    return;
+  }
+
+  // Show password modal
+  mainApp.style.display = "none";
+  passwordModal.showModal();
+
+  passwordForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (passwordInput.value === CORRECT_PASSWORD) {
+      sessionStorage.setItem("gameAuthenticated", "true");
+      mainApp.style.display = "block";
+      passwordModal.close();
+    } else {
+      passwordInput.value = "";
+      passwordInput.placeholder = "Wrong password, try again";
+    }
+  });
+}
+
+// Run password check when page loads
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initPasswordProtection);
+} else {
+  initPasswordProtection();
+}
+
 const STORAGE_KEY = "cows-my-cows-v1";
 const FIREBASE_DB_URL = "https://cows-my-cows-default-rtdb.firebaseio.com";
 
