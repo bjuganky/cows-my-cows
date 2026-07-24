@@ -10,34 +10,22 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
 </head>
 <body>
-  <dialog id="passwordModal" style="border: none; border-radius: 20px;">
-    <form method="dialog" id="passwordForm" style="padding: 20px;">
-      <h2 style="margin-top: 0; margin-bottom: 20px;">Game Password</h2>
-      <label style="display: grid; gap: 6px; margin-bottom: 16px;">
+  <dialog id="passwordModal">
+    <form method="dialog" id="passwordForm">
+      <div class="modal-header">
+        <h2 id="modalTitle">Game Password</h2>
+      </div>
+      <label>
         Enter password:
-        <input id="passwordInput" type="password" placeholder="" autocomplete="off" style="border: 1px solid #d9d5ca; border-radius: 12px; padding: 12px; font-size: 1rem;">
+        <input id="passwordInput" type="password" placeholder="" autocomplete="off" autofocus>
       </label>
-      <div style="display: flex; gap: 8px;">
-        <button type="submit" style="flex: 1; padding: 11px; background: #173b2b; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold;">Enter</button>
+      <div class="modal-actions">
+        <button type="submit">Enter</button>
       </div>
     </form>
   </dialog>
 
   <div id="mainApp" style="display: none;">
-</head>
-<body>
-  <dialog id="passwordModal" style="border: none; border-radius: 20px;">
-    <form method="dialog" id="passwordForm" style="padding: 20px;">
-      <h2 style="margin-top: 0; margin-bottom: 20px;">Game Password</h2>
-      <label style="display: grid; gap: 6px; margin-bottom: 16px;">
-        Enter password:
-        <input id="passwordInput" type="password" placeholder="" autocomplete="off" style="border: 1px solid #d9d5ca; border-radius: 12px; padding: 12px; font-size: 1rem;">
-      </label>
-      <div style="display: flex; gap: 8px;">
-        <button type="submit" style="flex: 1; padding: 11px; background: #173b2b; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold;">Enter</button>
-      </div>
-    </form>
-  </dialog>
   <header class="app-header">
     <div>
       <p class="eyebrow">ROAD GAME SCOREKEEPER</p>

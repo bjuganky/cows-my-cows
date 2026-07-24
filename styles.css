@@ -99,6 +99,48 @@ dialog form { padding: 17px; }
   transition: .2s; z-index: 20; font-weight: 750; font-size: .82rem; white-space: nowrap; max-width: 92vw; overflow: hidden; text-overflow: ellipsis;
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#passwordModal {
+  width: min(92vw, 380px);
+  border: 0;
+  border-radius: 20px;
+  padding: 0;
+  color: var(--ink);
+  background: var(--card);
+  box-shadow: 0 30px 100px rgba(0,0,0,.3);
+}
+#passwordModal::backdrop { background: rgba(10,22,15,.58); backdrop-filter: blur(3px); }
+#passwordModal form { padding: 20px; }
+#passwordModal label {
+  display: grid;
+  gap: 6px;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+#passwordModal input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: white;
+  color: var(--ink);
+  outline: none;
+  font-size: 1rem;
+}
+#passwordModal input:focus { border-color: var(--green-2); box-shadow: 0 0 0 3px rgba(36,86,63,.12); }
+#passwordModal button[type="submit"] {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--green);
+  color: white;
+  border: 0;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 1rem;
+}
+#passwordModal button[type="submit"]:active { background: var(--green-2); }
 @media (min-width: 620px) {
   .action-grid { grid-template-columns: repeat(3,1fr); }
 }

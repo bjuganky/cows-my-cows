@@ -1,23 +1,32 @@
 const CORRECT_PASSWORD = "bkferules";
 
-// Password protection
+// Password protection - setup on DOM ready
 function initPasswordProtection() {
   const mainApp = document.getElementById("mainApp");
   const passwordModal = document.getElementById("passwordModal");
   const passwordForm = document.getElementById("passwordForm");
   const passwordInput = document.getElementById("passwordInput");
 
+  if (!mainApp || !passwordModal || !passwordForm || !passwordInput) {
+    console.error("Password modal elements not found");
+    return;
+  }
+
   // Check if user already authenticated in this session
   if (sessionStorage.getItem("gameAuthenticated") === "true") {
     mainApp.style.display = "block";
-    passwordModal.close();
     return;
   }
 
   // Show password modal
   mainApp.style.display = "none";
-  passwordModal.showModal();
+  
+  // Use setTimeout to ensure modal is ready
+  setTimeout(() => {
+    passwordModal.showModal();
+  }, 100);
 
+  // Setup form submission
   passwordForm.addEventListener("submit", (e) => {
     e.preventDefault();
     if (passwordInput.value === CORRECT_PASSWORD) {
@@ -27,11 +36,12 @@ function initPasswordProtection() {
     } else {
       passwordInput.value = "";
       passwordInput.placeholder = "Wrong password, try again";
+      passwordInput.focus();
     }
   });
 }
 
-// Run password check when page loads
+// Wait for DOM to be fully loaded
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initPasswordProtection);
 } else {
