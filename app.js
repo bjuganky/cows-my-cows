@@ -81,22 +81,15 @@ async function loadStateFromFirebase() {
 async function saveStateToFirebase(state) {
   if (!firebaseSyncEnabled) return;
   try {
-    console.log("Saving to Firebase:", state);
     const jsonBody = JSON.stringify(state);
-    console.log("JSON body length:", jsonBody.length);
-    
     const response = await fetch(`${FIREBASE_DB_URL}/games/default.json`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: jsonBody
     });
     
-    console.log("Firebase response status:", response.status, response.ok);
-    const responseText = await response.text();
-    console.log("Firebase response:", responseText);
-    
     if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-    console.log("Firebase save successful");
+    console.log("✓ Firebase save successful");
   } catch (error) {
     console.error("Firebase save error:", error.message);
     toast("Error saving to cloud: " + error.message);
@@ -135,7 +128,6 @@ function loadState() {
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  console.log("saveState called, firebaseSyncEnabled:", firebaseSyncEnabled, "isLoadingFromFirebase:", isLoadingFromFirebase);
   if (firebaseSyncEnabled && !isLoadingFromFirebase) {
     saveStateToFirebase(state);
   }
@@ -145,12 +137,19 @@ function saveState() {
 async function enableFirebaseSync() {
   if (!firebaseSyncEnabled) return;
   const fbState = await loadStateFromFirebase();
-  if (fbState && Array.isArray(fbState.players) && Array.isArray(fbState.rules)) {
-    state = fbState;
+  if (fbState && typeof fbState === 'object') {
+    // Merge Firebase state with current state to preserve all fields
+    state = {
+      drive: fbState.drive !== undefined ? fbState.drive : state.drive,
+      whataburgerCount: fbState.whataburgerCount !== undefined ? fbState.whataburgerCount : state.whataburgerCount,
+      players: Array.isArray(fbState.players) ? fbState.players : state.players,
+      rules: Array.isArray(fbState.rules) ? fbState.rules : state.rules,
+      history: Array.isArray(fbState.history) ? fbState.history : state.history
+    };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     console.log("Loaded state from Firebase:", state);
     render();
-  } else if (!fbState) {
+  } else {
     console.log("Firebase is empty, using local state");
   }
   
@@ -158,11 +157,21 @@ async function enableFirebaseSync() {
   setInterval(async () => {
     if (!isLoadingFromFirebase) {
       const fbState = await loadStateFromFirebase();
-      if (fbState && JSON.stringify(state) !== JSON.stringify(fbState)) {
-        state = fbState;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        render();
-        toast("Game updated from cloud");
+      if (fbState && typeof fbState === 'object') {
+        // Merge Firebase state with current state
+        const mergedState = {
+          drive: fbState.drive !== undefined ? fbState.drive : state.drive,
+          whataburgerCount: fbState.whataburgerCount !== undefined ? fbState.whataburgerCount : state.whataburgerCount,
+          players: Array.isArray(fbState.players) ? fbState.players : state.players,
+          rules: Array.isArray(fbState.rules) ? fbState.rules : state.rules,
+          history: Array.isArray(fbState.history) ? fbState.history : state.history
+        };
+        if (JSON.stringify(state) !== JSON.stringify(mergedState)) {
+          state = mergedState;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+          render();
+          toast("Game updated from cloud");
+        }
       }
     }
   }, 5000);
