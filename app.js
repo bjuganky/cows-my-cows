@@ -90,9 +90,38 @@ async function saveStateToFirebase(state) {
     
     if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
     console.log("✓ Firebase save successful");
+    
+    // After save, check if cloud has newer data
+    setTimeout(() => {
+      checkCloudForUpdates();
+    }, 100);
   } catch (error) {
     console.error("Firebase save error:", error.message);
     toast("Error saving to cloud: " + error.message);
+  }
+}
+
+async function checkCloudForUpdates() {
+  if (!firebaseSyncEnabled || isLoadingFromFirebase) return;
+  try {
+    const fbState = await loadStateFromFirebase();
+    if (fbState && typeof fbState === 'object') {
+      const mergedState = {
+        drive: fbState.drive !== undefined ? fbState.drive : state.drive,
+        whataburgerCount: fbState.whataburgerCount !== undefined ? fbState.whataburgerCount : state.whataburgerCount,
+        players: Array.isArray(fbState.players) ? fbState.players : state.players,
+        rules: Array.isArray(fbState.rules) ? fbState.rules : state.rules,
+        history: Array.isArray(fbState.history) ? fbState.history : state.history
+      };
+      if (JSON.stringify(state) !== JSON.stringify(mergedState)) {
+        state = mergedState;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        render();
+        toast("Game updated from cloud");
+      }
+    }
+  } catch (error) {
+    console.error("Error checking cloud for updates:", error.message);
   }
 }
 
@@ -147,34 +176,11 @@ async function enableFirebaseSync() {
       history: Array.isArray(fbState.history) ? fbState.history : state.history
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    console.log("Loaded state from Firebase:", state);
+    console.log("✓ Loaded state from Firebase");
     render();
   } else {
     console.log("Firebase is empty, using local state");
   }
-  
-  // Poll Firebase every 5 seconds for updates
-  setInterval(async () => {
-    if (!isLoadingFromFirebase) {
-      const fbState = await loadStateFromFirebase();
-      if (fbState && typeof fbState === 'object') {
-        // Merge Firebase state with current state
-        const mergedState = {
-          drive: fbState.drive !== undefined ? fbState.drive : state.drive,
-          whataburgerCount: fbState.whataburgerCount !== undefined ? fbState.whataburgerCount : state.whataburgerCount,
-          players: Array.isArray(fbState.players) ? fbState.players : state.players,
-          rules: Array.isArray(fbState.rules) ? fbState.rules : state.rules,
-          history: Array.isArray(fbState.history) ? fbState.history : state.history
-        };
-        if (JSON.stringify(state) !== JSON.stringify(mergedState)) {
-          state = mergedState;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-          render();
-          toast("Game updated from cloud");
-        }
-      }
-    }
-  }, 5000);
 }
 
 function snapshot() {
