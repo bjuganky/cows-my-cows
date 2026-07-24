@@ -126,10 +126,11 @@ function uid() {
 function loadState() {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return parsed && Array.isArray(parsed.players) ? parsed : freshState();
-  } catch {
-    return freshState();
-  }
+    if (parsed && Array.isArray(parsed.players) && Array.isArray(parsed.rules) && Array.isArray(parsed.history)) {
+      return parsed;
+    }
+  } catch {}
+  return freshState();
 }
 
 function saveState() {
@@ -144,10 +145,13 @@ function saveState() {
 async function enableFirebaseSync() {
   if (!firebaseSyncEnabled) return;
   const fbState = await loadStateFromFirebase();
-  if (fbState && Array.isArray(fbState.players)) {
+  if (fbState && Array.isArray(fbState.players) && Array.isArray(fbState.rules)) {
     state = fbState;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    console.log("Loaded state from Firebase:", state);
     render();
+  } else if (!fbState) {
+    console.log("Firebase is empty, using local state");
   }
   
   // Poll Firebase every 5 seconds for updates
@@ -228,6 +232,17 @@ modalForm.addEventListener("submit", (event) => {
 });
 
 function render() {
+  // Ensure state has all required properties
+  if (!state || typeof state !== 'object') {
+    console.warn("State is invalid, resetting to fresh state");
+    state = freshState();
+  }
+  if (!Array.isArray(state.players)) state.players = [];
+  if (!Array.isArray(state.rules)) state.rules = [];
+  if (!Array.isArray(state.history)) state.history = [];
+  if (typeof state.drive !== 'number') state.drive = 1;
+  if (typeof state.whataburgerCount !== 'number') state.whataburgerCount = 0;
+
   $("driveNumber").textContent = state.drive;
   $("playerCount").textContent = state.players.length;
   $("whataburgerCount").textContent = state.whataburgerCount;
@@ -584,9 +599,11 @@ function runAction(action) {
 $("nextDriveBtn").addEventListener("click", () => {
   snapshot();
   state.drive += 1;
-  state.rules.forEach(r => {
-    if (r.status === "pending" && r.startsDrive <= state.drive) r.status = "active";
-  });
+  if (Array.isArray(state.rules)) {
+    state.rules.forEach(r => {
+      if (r.status === "pending" && r.startsDrive <= state.drive) r.status = "active";
+    });
+  }
   const now = new Date();
   const expired = [];
   state.players.forEach(p => {
@@ -603,9 +620,11 @@ $("nextDriveBtn").addEventListener("click", () => {
 $("nextDriveBtnMain").addEventListener("click", () => {
   snapshot();
   state.drive += 1;
-  state.rules.forEach(r => {
-    if (r.status === "pending" && r.startsDrive <= state.drive) r.status = "active";
-  });
+  if (Array.isArray(state.rules)) {
+    state.rules.forEach(r => {
+      if (r.status === "pending" && r.startsDrive <= state.drive) r.status = "active";
+    });
+  }
   const now = new Date();
   const expired = [];
   state.players.forEach(p => {
@@ -695,6 +714,9 @@ async function checkFirebaseConnection() {
 }`);
   }
 }
+
+// Initial render with state
+render();
 
 // Enable sync - REST API is immediately available
 setTimeout(() => {
