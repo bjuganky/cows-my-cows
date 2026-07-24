@@ -232,24 +232,34 @@ modalForm.addEventListener("submit", (event) => {
 });
 
 function render() {
-  // Ensure state has all required properties
-  if (!state || typeof state !== 'object') {
-    console.warn("State is invalid, resetting to fresh state");
-    state = freshState();
-  }
-  if (!Array.isArray(state.players)) state.players = [];
-  if (!Array.isArray(state.rules)) state.rules = [];
-  if (!Array.isArray(state.history)) state.history = [];
-  if (typeof state.drive !== 'number') state.drive = 1;
-  if (typeof state.whataburgerCount !== 'number') state.whataburgerCount = 0;
+  try {
+    // Ensure state has all required properties
+    if (!state || typeof state !== 'object') {
+      console.warn("State is invalid, resetting to fresh state", state);
+      state = freshState();
+    }
+    if (!state.players || !Array.isArray(state.players)) {
+      console.warn("state.players is invalid, resetting");
+      state.players = [];
+    }
+    if (!state.rules || !Array.isArray(state.rules)) {
+      console.warn("state.rules is invalid, resetting");
+      state.rules = [];
+    }
+    if (!state.history || !Array.isArray(state.history)) {
+      console.warn("state.history is invalid, resetting");
+      state.history = [];
+    }
+    if (typeof state.drive !== 'number') state.drive = 1;
+    if (typeof state.whataburgerCount !== 'number') state.whataburgerCount = 0;
 
-  $("driveNumber").textContent = state.drive;
-  $("playerCount").textContent = state.players.length;
-  $("whataburgerCount").textContent = state.whataburgerCount;
+    $("driveNumber").textContent = state.drive;
+    $("playerCount").textContent = state.players.length;
+    $("whataburgerCount").textContent = state.whataburgerCount;
 
-  const sorted = [...state.players].sort((a,b) => b.cows - a.cows || b.bank - a.bank || a.name.localeCompare(b.name));
-  $("scoreboard").className = state.players.length ? "scoreboard" : "scoreboard empty-state";
-  $("scoreboard").innerHTML = state.players.length ? sorted.map((p, i) => {
+    const sorted = [...state.players].sort((a,b) => b.cows - a.cows || b.bank - a.bank || a.name.localeCompare(b.name));
+    $("scoreboard").className = state.players.length ? "scoreboard" : "scoreboard empty-state";
+    $("scoreboard").innerHTML = state.players.length ? sorted.map((p, i) => {
     let insuranceText = "not insured";
     if (p.insurance) {
       const now = new Date();
@@ -304,6 +314,9 @@ function render() {
   // Show/hide next drive buttons based on player count
   if ($("nextDriveBtn")) $("nextDriveBtn").style.display = state.players.length ? "block" : "none";
   if ($("nextDriveBtnMain")) $("nextDriveBtnMain").style.display = state.players.length ? "block" : "none";
+  } catch (error) {
+    console.error("Render error:", error, "state:", state);
+  }
 }
 
 function requirePlayers(count = 1) {
