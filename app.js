@@ -221,6 +221,10 @@ function escapeHtml(value) {
   })[c]);
 }
 
+function formatScore(value) {
+  return Number(value).toLocaleString("en-US");
+}
+
 function toast(message) {
   const t = $("toast");
   t.textContent = message;
@@ -286,9 +290,9 @@ function render() {
       <div class="rank">${i + 1}</div>
       <div>
         <div class="player-name">${escapeHtml(p.name)} ${p.insurance ? "[INSURED]" : ""}</div>
-        <div class="player-meta">Bank: ${p.bank} · ${insuranceText}</div>
+        <div class="player-meta">Bank: ${formatScore(p.bank)} · ${insuranceText}</div>
       </div>
-      <div class="score"><strong>${p.cows}</strong><small>cows</small></div>
+      <div class="score"><strong>${formatScore(p.cows)}</strong><small>cows</small></div>
     </div>
   `;
   }).join("") : "Add players to begin.";
@@ -308,9 +312,9 @@ function render() {
         <div class="rank">${i + 1}</div>
         <div>
           <div class="player-name">${escapeHtml(p.name)} ${p.insurance ? "[INSURED]" : ""}</div>
-          <div class="player-meta">Bank: ${p.bank} · ${insuranceText}</div>
+          <div class="player-meta">Bank: ${formatScore(p.bank)} · ${insuranceText}</div>
         </div>
-        <div class="score"><strong>${p.cows}</strong><small>cows</small></div>
+        <div class="score"><strong>${formatScore(p.cows)}</strong><small>cows</small></div>
       </div>
     `;
     }).join("") : "Add players to begin.";
