@@ -6,14 +6,15 @@
   <meta name="theme-color" content="#173b2b" />
   <title>Cows My Cows</title>
   <link rel="stylesheet" href="styles.css" />
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 </head>
 <body>
   <dialog id="passwordModal">
     <form method="dialog" id="passwordForm">
       <div class="modal-header">
         <h2 id="modalTitle">Game Password</h2>
+        <button type="button" class="icon-btn" aria-label="Close" onclick="document.getElementById('passwordModal').close()">×</button>
       </div>
       <label>
         Enter password:

@@ -64,13 +64,24 @@ let firebaseDb = null;
 let firebaseSyncEnabled = false;
 let isLoadingFromFirebase = false;
 
-try {
-  firebase.initializeApp(firebaseConfig);
-  firebaseDb = firebase.database();
-  firebaseSyncEnabled = true;
-} catch (e) {
-  console.log("Firebase not available");
-}
+// Wait a bit for Firebase to load from CDN
+setTimeout(() => {
+  try {
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length === 0) {
+      firebase.initializeApp(firebaseConfig);
+      firebaseDb = firebase.database();
+      firebaseSyncEnabled = true;
+      console.log("Firebase initialized successfully");
+    } else if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+      firebaseDb = firebase.database();
+      firebaseSyncEnabled = true;
+      console.log("Firebase already initialized");
+    }
+  } catch (e) {
+    console.error("Firebase initialization error:", e.message);
+    firebaseSyncEnabled = false;
+  }
+}, 500);
 
 const freshState = () => ({
   drive: 1,
@@ -615,6 +626,9 @@ function checkFirebaseConnection() {
 }
 
 // Call connection check after a delay to let Firebase initialize
-setTimeout(checkFirebaseConnection, 2000);
+setTimeout(checkFirebaseConnection, 3000);
 
-if (firebaseSyncEnabled) enableFirebaseSync();
+// Enable sync after Firebase initializes
+setTimeout(() => {
+  if (firebaseSyncEnabled) enableFirebaseSync();
+}, 1000);
