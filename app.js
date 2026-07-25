@@ -275,6 +275,9 @@ function render() {
     $("driveNumber").textContent = state.drive;
     $("playerCount").textContent = state.players.length;
     $("whataburgerCount").textContent = state.whataburgerCount;
+    if ($("driveNumberMain")) $("driveNumberMain").textContent = state.drive;
+    if ($("playerCountMain")) $("playerCountMain").textContent = state.players.length;
+    if ($("whataburgerCountMain")) $("whataburgerCountMain").textContent = state.whataburgerCount;
 
     const sorted = [...state.players].sort((a,b) => b.cows - a.cows || b.bank - a.bank || a.name.localeCompare(b.name));
     $("scoreboard").className = state.players.length ? "scoreboard" : "scoreboard empty-state";
@@ -329,6 +332,15 @@ function render() {
       <small>${escapeHtml(h.time)}</small>
     </div>
   `).join("") : "No actions yet.";
+  if ($("historyListMain")) {
+    $("historyListMain").className = state.history.length ? "history-list" : "history-list empty-state";
+    $("historyListMain").innerHTML = state.history.length ? state.history.slice(0, 20).map(h => `
+      <div class="history-item">
+        ${escapeHtml(h.text)}
+        <small>${escapeHtml(h.time)}</small>
+      </div>
+    `).join("") : "No actions yet.";
+  }
 
   // Show/hide next drive buttons based on player count
   if ($("nextDriveBtn")) $("nextDriveBtn").style.display = state.players.length ? "block" : "none";
@@ -473,13 +485,19 @@ function runAction(action) {
   if (action === "burger") {
     openModal("Whataburger", `
       <label>Caller<select id="actor">${options()}</select></label>
-      <p class="warning">The caller gets +1 to the running total and receives that many cows. Current: ${state.whataburgerCount + 1}</p>
+      <p class="warning">The caller raises the running total to ${state.whataburgerCount + 1}. Every other player loses up to that many current cows, and all cows lost are transferred to the caller.</p>
     `, "Call Whataburger", () => {
       const actor = playerById($("actor").value);
       snapshot();
       state.whataburgerCount += 1;
-      actor.cows += state.whataburgerCount;
-      addHistory(`${actor.name} called Whataburger #${state.whataburgerCount} and gained ${state.whataburgerCount} cows.`);
+      const transferAmount = state.players.reduce((total, player) => {
+        if (player.id === actor.id) return total;
+        const loss = Math.min(player.cows, state.whataburgerCount);
+        player.cows -= loss;
+        return total + loss;
+      }, 0);
+      actor.cows += transferAmount;
+      addHistory(`${actor.name} called Whataburger #${state.whataburgerCount} and collected ${transferAmount} cows from everyone else.`);
       saveState(); return true;
     });
   }

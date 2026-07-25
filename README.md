@@ -34,7 +34,7 @@ No build command or paid service is required.
 ## Assumptions used
 
 - Percentage calculations round up.
-- Burger Time makes every other player pay the caller, capped by each player's available current cows.
+- Burger Time increases the running Whataburger count, then makes every other player pay the caller that many current cows, capped by each player's available current cows.
 - The casino loss wheel uses 5%, 10%, 20%, 25%, 50%, 75%, or 100%.
 - “Four-day insurance” is represented as four drives because the app tracks drives.
 - Banked cows are unaffected by multipliers, swaps, theft, and losses.
