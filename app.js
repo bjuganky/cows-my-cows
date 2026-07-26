@@ -470,12 +470,12 @@ function runAction(action) {
     openModal("Rustle your cows", `
       <label>Rustler<select id="actor">${options()}</select></label>
       <label>Victim<select id="target">${options(state.players[1]?.id)}</select></label>
-      <p class="warning">Steals 20% of the victim's current, unbanked cows. Percentage losses are rounded up.</p>
+      <p class="warning">Steals 10% of the victim's current, unbanked cows. Percentage losses are rounded up.</p>
     `, "Steal cows", () => {
       const actor = playerById($("actor").value), target = playerById($("target").value);
       if (actor.id === target.id) return toast("Choose two different players"), false;
       snapshot();
-      const stolen = Math.min(target.cows, pct(target.cows, 20));
+      const stolen = Math.min(target.cows, pct(target.cows, 10));
       target.cows -= stolen; actor.cows += stolen;
       addHistory(`${actor.name} rustled ${stolen} cows from ${target.name}.`);
       saveState(); return true;
